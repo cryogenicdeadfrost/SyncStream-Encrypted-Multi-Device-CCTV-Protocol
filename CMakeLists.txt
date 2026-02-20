@@ -11,6 +11,7 @@ find_package(OpenSSL REQUIRED)
 
 add_library(syncstream STATIC
     src/secure_channel.cpp
+    src/middleware.cpp
 )
 
 target_include_directories(syncstream PUBLIC include)
