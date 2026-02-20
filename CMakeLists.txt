@@ -12,8 +12,6 @@ find_package(OpenSSL REQUIRED)
 add_library(syncstream STATIC
     src/secure_channel.cpp
     src/middleware.cpp
-    src/keychain.cpp
-    src/edge_hub.cpp
 )
 
 target_include_directories(syncstream PUBLIC include)
@@ -30,21 +28,7 @@ endif()
 add_executable(syncstream_cli src/main.cpp)
 target_link_libraries(syncstream_cli PRIVATE syncstream)
 
-add_executable(syncstream_mobile_bridge examples/mobile_bridge.cpp)
-target_link_libraries(syncstream_mobile_bridge PRIVATE syncstream)
-
-add_executable(syncstream_edge_hub_demo examples/edge_hub_demo.cpp)
-target_link_libraries(syncstream_edge_hub_demo PRIVATE syncstream)
-
 enable_testing()
 add_executable(syncstream_tests tests/secure_channel_test.cpp)
 target_link_libraries(syncstream_tests PRIVATE syncstream)
 add_test(NAME syncstream_tests COMMAND syncstream_tests)
-
-add_executable(syncstream_middleware_tests tests/middleware_test.cpp)
-target_link_libraries(syncstream_middleware_tests PRIVATE syncstream)
-add_test(NAME syncstream_middleware_tests COMMAND syncstream_middleware_tests)
-
-add_executable(syncstream_edge_hub_tests tests/edge_hub_test.cpp)
-target_link_libraries(syncstream_edge_hub_tests PRIVATE syncstream)
-add_test(NAME syncstream_edge_hub_tests COMMAND syncstream_edge_hub_tests)
