@@ -107,7 +107,7 @@ CommandRequest unpack_request(const Ctrl& ctrl, const ApiConfig& config) {
 }
 
 std::vector<std::uint8_t> pack_response(const CommandResponse& response, std::size_t max_payload) {
-    if (response.request_id.empty() || response.request_id.size() > 65535) fail("invalid response request id");
+    if (response.request_id.empty() || response.request_id.size() > std::numeric_limits<std::uint16_t>::max()) fail("invalid response request id");
     if (response.payload.size() > max_payload) fail("response payload exceeds configured limit");
     if (response.error.size() > 1024) fail("response error too long");
 
