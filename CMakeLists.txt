@@ -22,8 +22,8 @@ add_library(syncstream STATIC
 
 target_include_directories(syncstream
     PUBLIC
-        $<BUILD_INTERFACE:\${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:\${CMAKE_INSTALL_INCLUDEDIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(syncstream PUBLIC OpenSSL::Crypto)
@@ -68,38 +68,38 @@ add_test(NAME syncstream_api_tests COMMAND syncstream_api_tests)
 install(
     TARGETS syncstream
     EXPORT SyncStreamTargets
-    ARCHIVE DESTINATION \${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION \${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION \${CMAKE_INSTALL_BINDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 install(
     DIRECTORY include/
-    DESTINATION \${CMAKE_INSTALL_INCLUDEDIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(
     EXPORT SyncStreamTargets
     FILE SyncStreamTargets.cmake
     NAMESPACE SyncStream::
-    DESTINATION \${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
 )
 
 configure_package_config_file(
-    \${CMAKE_CURRENT_SOURCE_DIR}/cmake/SyncStreamConfig.cmake.in
-    \${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfig.cmake
-    INSTALL_DESTINATION \${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SyncStreamConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
 )
 
 write_basic_package_version_file(
-    \${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
-    VERSION \${PROJECT_VERSION}
+    ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 install(
     FILES
-        \${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfig.cmake
-        \${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
-    DESTINATION \${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
+        ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
 )
