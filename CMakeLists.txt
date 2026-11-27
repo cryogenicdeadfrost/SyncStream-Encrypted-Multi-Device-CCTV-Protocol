@@ -8,6 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(SYNCSTREAM_STRICT "Enable strict warnings" ON)
 option(SYNCSTREAM_BUILD_EXAMPLES "Build integration examples" ON)
 option(SYNCSTREAM_BUILD_CAPTURE_EXAMPLE "Build the optional OpenCV camera capture example" OFF)
+option(SYNCSTREAM_BUILD_TESTS "Build the CTest test executables" ON)
+option(SYNCSTREAM_BUILD_CLI "Build the command-line executable" ON)
+
+if(ANDROID AND DEFINED SYNCSTREAM_ANDROID_OPENSSL_ROOT)
+    set(OPENSSL_ROOT_DIR "${SYNCSTREAM_ANDROID_OPENSSL_ROOT}")
+    set(OPENSSL_INCLUDE_DIR "${SYNCSTREAM_ANDROID_OPENSSL_ROOT}/include")
+    set(OPENSSL_CRYPTO_LIBRARY "${SYNCSTREAM_ANDROID_OPENSSL_ROOT}/lib/libcrypto.a")
+endif()
 
 find_package(OpenSSL REQUIRED)
 include(GNUInstallDirs)
@@ -43,8 +51,10 @@ if(SYNCSTREAM_STRICT)
     endif()
 endif()
 
-add_executable(syncstream_cli src/main.cpp)
-target_link_libraries(syncstream_cli PRIVATE syncstream)
+if(SYNCSTREAM_BUILD_CLI)
+    add_executable(syncstream_cli src/main.cpp)
+    target_link_libraries(syncstream_cli PRIVATE syncstream)
+endif()
 
 if(SYNCSTREAM_BUILD_EXAMPLES)
     add_executable(syncstream_mobile_bridge examples/mobile_bridge.cpp)
@@ -71,6 +81,7 @@ if(SYNCSTREAM_BUILD_CAPTURE_EXAMPLE)
     target_include_directories(syncstream_capture_stream PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
 
+if(SYNCSTREAM_BUILD_TESTS)
 enable_testing()
 
 add_executable(syncstream_secure_channel_tests tests/secure_channel_test.cpp)
@@ -99,6 +110,8 @@ add_test(NAME syncstream_reliability_tests COMMAND syncstream_reliability_tests)
 
 if(SYNCSTREAM_BUILD_EXAMPLES)
     add_test(NAME syncstream_standalone_phone_test COMMAND syncstream_standalone_phone_test)
+endif()
+
 endif()
 
 install(
