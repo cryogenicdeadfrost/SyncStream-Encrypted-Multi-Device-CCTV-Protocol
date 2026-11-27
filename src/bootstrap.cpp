@@ -3,8 +3,7 @@
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 
-#include <iomanip>
-#include <sstream>
+#include <algorithm>
 #include <stdexcept>
 
 namespace syncstream {
