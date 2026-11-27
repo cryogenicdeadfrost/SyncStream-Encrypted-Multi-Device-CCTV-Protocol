@@ -1,36 +1,38 @@
-#include "syncstream/middleware.hpp"
+#include "syncstream/api.hpp"
 
-#include <array>
-#include <chrono>
 #include <cstdint>
 #include <iostream>
-#include <stdexcept>
 #include <string>
 #include <vector>
-
-std::vector<std::uint8_t> bytes_of(const std::string& s) {
-    return std::vector<std::uint8_t>(s.begin(), s.end());
-}
 
 int main() {
     try {
         const auto key = syncstream::mint_key();
-        syncstream::RelayCore phone_side(key, std::chrono::seconds(45));
-        syncstream::RelayCore relay_side(key, std::chrono::seconds(45));
 
-        syncstream::Ctrl ctrl{};
-        ctrl.dev = "android-cam-a";
-        ctrl.cmd = syncstream::Cmd::sync;
-        ctrl.at_ms = syncstream::now_ms();
-        ctrl.body = bytes_of("start:1080p:30fps");
+        syncstream::CameraClient phone(key);
+        syncstream::CameraServer camera(key);
 
-        const auto env = phone_side.seal_ctrl(ctrl);
-        const auto out = relay_side.open_ctrl(env);
+        const std::vector<std::uint8_t> settings{'1', '0', '8', '0', 'p', ':', '3', '0'};
+        const auto wire = phone.make_command(
+            "android-cam-a",
+            syncstream::Cmd::set_stream,
+            settings);
 
-        std::cout << "seq=" << env.seq << '\n';
-        std::cout << "device=" << out.dev << '\n';
-        std::cout << "cmd=" << static_cast<int>(out.cmd) << '\n';
-        std::cout << "payload=" << std::string(out.body.begin(), out.body.end()) << '\n';
+        const auto request = camera.open_wire(wire);
+
+        std::cout << "request_id=" << request.request_id << '\n';
+        std::cout << "device=" << request.device_id << '\n';
+        std::cout << "cmd=" << static_cast<int>(request.command) << '\n';
+
+        const auto response = camera.make_response(
+            request,
+            true,
+            std::vector<std::uint8_t>{'o', 'k'});
+
+        const auto result = phone.open_response(response);
+
+        std::cout << "accepted=" << (result.accepted ? "true" : "false") << '\n';
+        std::cout << "response=" << std::string(result.payload.begin(), result.payload.end()) << '\n';
         return 0;
     } catch (const std::exception& ex) {
         std::cerr << ex.what() << '\n';

@@ -107,7 +107,7 @@ CommandRequest unpack_request(const Ctrl& ctrl, const ApiConfig& config) {
 }
 
 std::vector<std::uint8_t> pack_response(const CommandResponse& response, std::size_t max_payload) {
-    if (response.request_id.empty() || response.request_id.size() > 65535) fail("invalid response request id");
+    if (response.request_id.empty() || response.request_id.size() > std::numeric_limits<std::uint16_t>::max()) fail("invalid response request id");
     if (response.payload.size() > max_payload) fail("response payload exceeds configured limit");
     if (response.error.size() > 1024) fail("response error too long");
 
@@ -121,7 +121,7 @@ std::vector<std::uint8_t> pack_response(const CommandResponse& response, std::si
     return out;
 }
 
-CommandResponse unpack_response(const Ctrl& ctrl) {
+CommandResponse unpack_response(const Ctrl& ctrl, const ApiConfig& config) {
     std::size_t at = 0;
     const auto id_len = static_cast<std::size_t>(get_u16(ctrl.body, at));
     if (id_len == 0 || id_len > 128 || at + id_len > ctrl.body.size()) fail("invalid response request id");
@@ -131,8 +131,10 @@ CommandResponse unpack_response(const Ctrl& ctrl) {
                                ctrl.body.begin() + static_cast<std::ptrdiff_t>(at + id_len));
     at += id_len;
     response.device_id = ctrl.dev;
-    response.accepted = get_u8(ctrl.body, at) != 0;
-    response.payload = get_bytes(ctrl.body, at, max_payload_len);
+    const auto accepted = get_u8(ctrl.body, at);
+    if (accepted > 1U) fail("invalid response acceptance flag");
+    response.accepted = accepted != 0U;
+    response.payload = get_bytes(ctrl.body, at, config.max_payload);
 
     const auto error_len = static_cast<std::size_t>(get_u16(ctrl.body, at));
     if (error_len > 1024 || at + error_len != ctrl.body.size()) fail("invalid response error");
@@ -238,7 +240,7 @@ std::vector<std::uint8_t> CameraClient::seal_wire(const CommandRequest& request)
 CommandResponse CameraClient::open_response(std::span<const std::uint8_t> wire) {
     const auto ctrl = core_.open_ctrl(WireCodec::decode(wire));
     if (ctrl.cmd != Cmd::ping) fail("unexpected response command");
-    return unpack_response(ctrl);
+    return unpack_response(ctrl, config_);
 }
 
 CameraServer::CameraServer(std::array<std::uint8_t, key_len> key, ApiConfig config)
@@ -246,11 +248,11 @@ CameraServer::CameraServer(std::array<std::uint8_t, key_len> key, ApiConfig conf
     validate_config(config_);
 }
 
-CommandRequest CameraServer::open(const Env& env) const {
+CommandRequest CameraServer::open(const Env& env) {
     return unpack_request(core_.open_ctrl(env), config_);
 }
 
-CommandRequest CameraServer::open_wire(std::span<const std::uint8_t> wire) const {
+CommandRequest CameraServer::open_wire(std::span<const std::uint8_t> wire) {
     return open(WireCodec::decode(wire));
 }
 

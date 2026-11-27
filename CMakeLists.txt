@@ -9,6 +9,8 @@ option(SYNCSTREAM_STRICT "Enable strict warnings" ON)
 option(SYNCSTREAM_BUILD_EXAMPLES "Build integration examples" ON)
 
 find_package(OpenSSL REQUIRED)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
 add_library(syncstream STATIC
     src/secure_channel.cpp
@@ -18,7 +20,12 @@ add_library(syncstream STATIC
     src/api.cpp
 )
 
-target_include_directories(syncstream PUBLIC include)
+target_include_directories(syncstream
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 target_link_libraries(syncstream PUBLIC OpenSSL::Crypto)
 
 if(SYNCSTREAM_STRICT)
@@ -42,11 +49,57 @@ endif()
 
 enable_testing()
 
-add_executable(syncstream_tests
-    tests/secure_channel_test.cpp
-    tests/middleware_test.cpp
-    tests/edge_hub_test.cpp
-    tests/api_test.cpp
+add_executable(syncstream_secure_channel_tests tests/secure_channel_test.cpp)
+target_link_libraries(syncstream_secure_channel_tests PRIVATE syncstream)
+add_test(NAME syncstream_secure_channel_tests COMMAND syncstream_secure_channel_tests)
+
+add_executable(syncstream_middleware_tests tests/middleware_test.cpp)
+target_link_libraries(syncstream_middleware_tests PRIVATE syncstream)
+add_test(NAME syncstream_middleware_tests COMMAND syncstream_middleware_tests)
+
+add_executable(syncstream_edge_hub_tests tests/edge_hub_test.cpp)
+target_link_libraries(syncstream_edge_hub_tests PRIVATE syncstream)
+add_test(NAME syncstream_edge_hub_tests COMMAND syncstream_edge_hub_tests)
+
+add_executable(syncstream_api_tests tests/api_test.cpp)
+target_link_libraries(syncstream_api_tests PRIVATE syncstream)
+add_test(NAME syncstream_api_tests COMMAND syncstream_api_tests)
+
+install(
+    TARGETS syncstream
+    EXPORT SyncStreamTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-target_link_libraries(syncstream_tests PRIVATE syncstream)
-add_test(NAME syncstream_tests COMMAND syncstream_tests)
+
+install(
+    DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    EXPORT SyncStreamTargets
+    FILE SyncStreamTargets.cmake
+    NAMESPACE SyncStream::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SyncStreamConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
+)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
+)
