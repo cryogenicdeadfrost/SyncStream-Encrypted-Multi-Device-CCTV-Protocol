@@ -1,0 +1,52 @@
+name: android-test
+
+on:
+  push:
+    paths:
+      - "android-test/**"
+      - "include/**"
+      - "src/**"
+      - "scripts/build_android_openssl.sh"
+      - ".github/workflows/android-test.yml"
+  pull_request:
+    paths:
+      - "android-test/**"
+      - "include/**"
+      - "src/**"
+      - "scripts/build_android_openssl.sh"
+      - ".github/workflows/android-test.yml"
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK and CMake
+        run: sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Build OpenSSL for Android
+        env:
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
+        run: |
+          chmod +x scripts/build_android_openssl.sh
+          scripts/build_android_openssl.sh
+
+      - name: Build debug APK
+        working-directory: android-test
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: syncstream-android-test-debug
+          path: android-test/app/build/outputs/apk/debug/app-debug.apk
