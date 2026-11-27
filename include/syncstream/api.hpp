@@ -1,6 +1,6 @@
 #pragma once
 
-#include "syncstream/middleware.hpp"
+#include "syncstream/edge_hub.hpp"
 
 #include <array>
 #include <chrono>
