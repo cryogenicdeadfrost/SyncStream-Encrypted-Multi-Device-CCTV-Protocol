@@ -246,11 +246,11 @@ CameraServer::CameraServer(std::array<std::uint8_t, key_len> key, ApiConfig conf
     validate_config(config_);
 }
 
-CommandRequest CameraServer::open(const Env& env) const {
+CommandRequest CameraServer::open(const Env& env) {
     return unpack_request(core_.open_ctrl(env), config_);
 }
 
-CommandRequest CameraServer::open_wire(std::span<const std::uint8_t> wire) const {
+CommandRequest CameraServer::open_wire(std::span<const std::uint8_t> wire) {
     return open(WireCodec::decode(wire));
 }
 
