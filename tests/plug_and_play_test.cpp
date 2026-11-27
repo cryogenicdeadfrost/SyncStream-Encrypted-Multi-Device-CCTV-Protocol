@@ -18,7 +18,7 @@ public:
 
     void send(std::span<const std::uint8_t> frame) override {
         const auto request = server_.open_wire(frame);
-        reply_ = server_.make_response(request, true, {});
+        reply_ = server_.make_response(request, true, std::span<const std::uint8_t>{});
     }
 
     std::vector<std::uint8_t> receive() override { return reply_; }
