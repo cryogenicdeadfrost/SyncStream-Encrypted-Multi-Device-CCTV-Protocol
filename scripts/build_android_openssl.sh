@@ -2,10 +2,13 @@
 set -euo pipefail
 
 OPENSSL_VERSION="${OPENSSL_VERSION:-3.6.5}"
-NDK_VERSION="${NDK_VERSION:-r27c}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${ROOT}/third_party/android-openssl"
 CACHE="${ROOT}/.cache"
+TARBALL="${CACHE}/openssl-${OPENSSL_VERSION}.tar.gz"
+SOURCE_ROOT="${CACHE}/openssl-source-${OPENSSL_VERSION}"
+BUILD_ROOT="${CACHE}/openssl-build-${OPENSSL_VERSION}"
+
 mkdir -p "${CACHE}" "${OUT}"
 
 case "$(uname -s)" in
@@ -20,17 +23,13 @@ if [[ -z "${NDK}" ]]; then
   exit 2
 fi
 
-TARBALL="${CACHE}/openssl-${OPENSSL_VERSION}.tar.gz"
-URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz"
-
 if [[ ! -f "${TARBALL}" ]]; then
-  curl -L --fail --retry 3 "${URL}" -o "${TARBALL}"
+  curl -L --fail --retry 3 "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz" -o "${TARBALL}"
 fi
 
-SRC="${CACHE}/openssl-${OPENSSL_VERSION}"
-if [[ ! -d "${SRC}" ]]; then
-  tar -xf "${TARBALL}" -C "${CACHE}"
-fi
+rm -rf "${SOURCE_ROOT}" "${BUILD_ROOT}"
+mkdir -p "${SOURCE_ROOT}" "${BUILD_ROOT}"
+tar -xf "${TARBALL}" -C "${SOURCE_ROOT}"
 
 export PATH="${NDK}/toolchains/llvm/prebuilt/${HOST_TAG}/bin:${PATH}"
 
@@ -38,11 +37,17 @@ build_one() {
   local target="$1"
   local abi="$2"
   local prefix="${OUT}/${abi}"
+  local build_dir="${BUILD_ROOT}/${abi}"
 
-  rm -rf "${SRC}/android-build-${abi}"
-  cp -a "${SRC}" "${SRC}/android-build-${abi}"
-  cd "${SRC}/android-build-${abi}"
+  rm -rf "${build_dir}" "${prefix}"
+  mkdir -p "${build_dir}"
 
+  # Keep the extracted source tree outside its own destination. The previous
+  # implementation copied a directory into itself, which made CI fail before
+  # Configure was even reached.
+  cp -a "${SOURCE_ROOT}/openssl-${OPENSSL_VERSION}/." "${build_dir}/"
+
+  cd "${build_dir}"
   ./Configure "${target}" \
     -D__ANDROID_API__=24 \
     no-shared no-tests no-apps \
@@ -50,11 +55,11 @@ build_one() {
 
   make -j"$(getconf _NPROCESSORS_ONLN || echo 2)"
   make install_sw
-
-  rm -rf "${SRC}/android-build-${abi}"
 }
 
 build_one android-arm64 arm64-v8a
 build_one android-x86_64 x86_64
+
+rm -rf "${SOURCE_ROOT}" "${BUILD_ROOT}"
 
 echo "Android OpenSSL prefixes generated under ${OUT}"
