@@ -6,10 +6,15 @@ project(syncstream_android_test LANGUAGES CXX)
 # identical to desktop builds while allowing Android to package libcrypto.
 set(SYNCSTREAM_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SYNCSTREAM_STRICT OFF CACHE BOOL "" FORCE)
+set(SYNCSTREAM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SYNCSTREAM_BUILD_CLI OFF CACHE BOOL "" FORCE)
 
+set(SYNCSTREAM_ANDROID_OPENSSL_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../../third_party/android-openssl/${ANDROID_ABI}" CACHE PATH "" FORCE)
 set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../../../third_party/android-openssl/${ANDROID_ABI}")
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 set(CMAKE_PREFIX_PATH "${OPENSSL_ROOT_DIR};${CMAKE_PREFIX_PATH}")
+set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
+set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_ROOT_DIR}/lib/libcrypto.a")
 add_subdirectory(../../../../../ syncstream-build EXCLUDE_FROM_ALL)
 
 find_library(log-lib log)
