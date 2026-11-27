@@ -132,3 +132,15 @@ install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/syncstream.pc
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
+
+
+set(CPACK_PACKAGE_NAME "syncstream")
+set(CPACK_PACKAGE_VENDOR "SyncStream")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Transport-agnostic encrypted C++ control-plane SDK")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_CONTACT "SyncStream maintainers")
+set(CPACK_GENERATOR "TGZ")
+if(UNIX AND NOT APPLE)
+    set(CPACK_GENERATOR "TGZ;DEB")
+endif()
+include(CPack)
