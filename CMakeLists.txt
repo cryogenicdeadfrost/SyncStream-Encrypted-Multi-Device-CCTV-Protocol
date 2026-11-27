@@ -57,6 +57,9 @@ if(SYNCSTREAM_BUILD_EXAMPLES)
 
     add_executable(syncstream_plug_and_play_demo examples/plug_and_play_demo.cpp)
     target_link_libraries(syncstream_plug_and_play_demo PRIVATE syncstream)
+
+    add_executable(syncstream_android_test_bridge examples/android_test_bridge.cpp)
+    target_link_libraries(syncstream_android_test_bridge PRIVATE syncstream)
 endif()
 
 if(SYNCSTREAM_BUILD_CAPTURE_EXAMPLE)
