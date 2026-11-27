@@ -375,11 +375,11 @@ The sample key is intentionally fixed for repeatable testing. It must never be r
 
 The protocol layer remains responsible for authenticated encryption, sequence numbers, timestamps, replay rejection, payload limits, malformed-frame rejection, request correlation, and key staging.
 
-The plug-and-play layer adds device discovery, transport selection, bootstrap metadata, identity fingerprints, and connection lifecycle management.
+The plug-and-play layer adds device discovery, transport selection, bootstrap metadata, identity fingerprints, connection lifecycle management, and reusable retry/fault-state primitives.
 
 Production enrollment should evolve the current PSK test path into device-specific credentials using authenticated device identity, ECDH-based session establishment, explicit user confirmation, credential rotation, and revocation.
 
-Transport loss must not be treated as protocol success. Recovery should use bounded timeouts, exponential backoff, jitter, heartbeats, session expiry, and idempotency-aware retries. Hardware-changing commands must not be blindly replayed after an uncertain delivery.
+Transport loss must not be treated as protocol success. Recovery should use bounded timeouts, exponential backoff with jitter, heartbeats, session expiry, and idempotency-aware retries. The `reliability.hpp` API classifies commands and exposes a bounded backoff policy plus session fault state. Hardware-changing commands must not be blindly replayed after an uncertain delivery.
 
 For the detailed state machine and threat model, see `docs/protocol.md`.
 
