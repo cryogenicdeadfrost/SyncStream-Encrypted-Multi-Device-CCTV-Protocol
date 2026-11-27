@@ -14,6 +14,11 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
+        // The CI OpenSSL helper currently produces these two ABIs.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
+
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++20"
