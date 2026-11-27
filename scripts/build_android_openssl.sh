@@ -48,6 +48,7 @@ build_one() {
 
   cd "${build_dir}"
   ./Configure "${target}" \
+    -U__ANDROID_API__ \
     -D__ANDROID_API__=24 \
     no-shared no-tests no-apps \
     --prefix="${prefix}"
