@@ -79,6 +79,10 @@ add_executable(syncstream_api_tests tests/api_test.cpp)
 target_link_libraries(syncstream_api_tests PRIVATE syncstream)
 add_test(NAME syncstream_api_tests COMMAND syncstream_api_tests)
 
+if(SYNCSTREAM_BUILD_EXAMPLES)
+    add_test(NAME syncstream_standalone_phone_test COMMAND syncstream_standalone_phone_test)
+endif()
+
 install(
     TARGETS syncstream
     EXPORT SyncStreamTargets
