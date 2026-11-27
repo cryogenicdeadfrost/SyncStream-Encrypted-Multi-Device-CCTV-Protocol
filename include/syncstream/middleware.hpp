@@ -17,7 +17,12 @@ enum class Cmd : std::uint8_t {
     arm = 1,
     disarm = 2,
     sync = 3,
-    ping = 4
+    ping = 4,
+    get_status = 5,
+    set_stream = 6,
+    start_recording = 7,
+    stop_recording = 8,
+    ptz = 9
 };
 
 struct Ctrl {
@@ -59,4 +64,4 @@ private:
 
 std::uint64_t now_ms();
 
-}
+} // namespace syncstream
