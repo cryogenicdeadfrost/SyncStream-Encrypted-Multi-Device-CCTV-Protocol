@@ -1,6 +1,6 @@
 # SyncStream Encrypted Multi-Device CCTV Protocol
 
-SyncStream is a small, transport-agnostic C++20 library for building encrypted phone-to-camera and multi-device CCTV control channels.
+SyncStream is a small, transport-agnostic C++20 SDK for building encrypted phone-to-camera and multi-device CCTV control channels. It is designed to be consumed like a normal system library: one stable umbrella header, one CMake target, and optional pkg-config metadata.
 
 The important distinction is deliberate: SyncStream secures the **control plane**. It does not pretend to be an NVR, RTSP server, WebRTC stack, or cloud service. Your application owns the transport and camera/media layer. SyncStream gives that application a stable API for authenticated commands, replay protection, timestamp checks, key derivation, wire encoding, and request/response handling.
 
@@ -19,6 +19,11 @@ The important distinction is deliberate: SyncStream secures the **control plane*
 - Request IDs and authenticated request/response correlation
 - Camera-oriented commands: arm, disarm, sync, ping, status, stream configuration, recording, and PTZ
 - No mandatory networking, cloud account, database, or paid service
+- Stable umbrella header: #include <syncstream/syncstream.hpp>
+- Installable CMake package: find_package(SyncStream CONFIG REQUIRED) and SyncStream::syncstream
+- pkg-config metadata for non-CMake consumers
+- Zero-setup standalone phone/camera loopback example with no real camera or network
+- Optional OpenCV capture example showing SyncStream controlling a real local camera while OpenCV handles video
 
 ## The high-level API
 
@@ -69,7 +74,7 @@ auto response = camera.make_response(
 // Send response back over the transport.
 ~~~
 
-The transport is intentionally not hidden inside SyncStream. This keeps the library usable on Android, iOS, Linux gateways, embedded systems, desktop applications, and custom transports without forcing one networking stack on every consumer.
+The transport is intentionally not hidden inside SyncStream. This keeps the library usable on Android, iOS, Linux gateways, embedded systems, desktop applications, and custom transports without forcing one networking stack on every consumer. The optional capture example follows the same rule: SyncStream controls camera state while a media library owns frame capture and recording.
 
 ## Recommended architecture
 
@@ -146,10 +151,51 @@ SyncStream deliberately does not provide:
 - NAT traversal
 - Push notifications
 - Persistent device databases
+- Persistent/shared replay storage by default
+- Device enrollment, approval, provisioning, rotation, or revocation
+- User authentication or user-to-camera authorization
+- Secure mobile key storage itself
+- Camera discovery
+- NAT traversal, TURN, signaling, or connection brokering
+- Video codecs, frame transport, media recording, or NVR storage
+- Vendor-specific ONVIF/RTSP/WebRTC implementations
+- Mobile UI, notifications, background-service lifecycle, or permissions
+- Cloud synchronization or remote account management
+- JNI/Kotlin, Swift, Python, or Rust bindings yet
 
 Those belong to the application built around the library.
 
 That is a feature, not a missing dependency. The library can therefore be embedded into a phone application, a Linux edge agent, a desktop CCTV client, or a larger server without dragging an entire surveillance platform into the dependency graph.
+
+## Use it like a normal C++ library
+
+From an installed SDK:
+
+~~~cpp
+#include <syncstream/syncstream.hpp>
+
+auto key = syncstream::mint_key();
+syncstream::CameraClient phone(key);
+auto wire = phone.make_command("camera-01", syncstream::Cmd::get_status);
+~~~
+
+CMake:
+
+~~~cmake
+find_package(SyncStream CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE SyncStream::syncstream)
+~~~
+
+For a source-tree integration:
+
+~~~cmake
+add_subdirectory(SyncStream-Encrypted-Multi-Device-CCTV-Protocol)
+target_link_libraries(my_app PRIVATE SyncStream::syncstream)
+~~~
+
+The installation also provides syncstream.pc for pkg-config based builds.
+
+For a first smoke test, build syncstream_standalone_phone_test. It simulates both endpoints in one process, so a developer can verify the public API, authenticated wire encoding, request/response correlation, and protocol processing before writing any networking or camera code.
 
 ## Build
 
