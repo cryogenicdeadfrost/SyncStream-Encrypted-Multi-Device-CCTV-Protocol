@@ -7,7 +7,6 @@
 
 #include <functional>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace syncstream {
@@ -25,7 +24,10 @@ struct ConnectionOptions {
 
 class CameraConnection {
 public:
-    CameraConnection(DeviceInfo info, std::unique_ptr<Transport> transport, CameraClient client);
+    CameraConnection(
+        DeviceInfo info,
+        std::unique_ptr<Transport> transport,
+        std::unique_ptr<CameraClient> client);
 
     const DeviceInfo& info() const noexcept;
     TransportKind transport_kind() const noexcept;
@@ -40,7 +42,7 @@ public:
 private:
     DeviceInfo info_;
     std::unique_ptr<Transport> transport_;
-    CameraClient client_;
+    std::unique_ptr<CameraClient> client_;
 };
 
 class ConnectionManager {
