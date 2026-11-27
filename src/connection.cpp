@@ -8,9 +8,9 @@ namespace syncstream {
 CameraConnection::CameraConnection(
     DeviceInfo info,
     std::unique_ptr<Transport> transport,
-    CameraClient client)
+    std::unique_ptr<CameraClient> client)
     : info_(std::move(info)), transport_(std::move(transport)), client_(std::move(client)) {
-    if (!transport_) throw std::invalid_argument("transport is required");
+    if (!transport_ || !client_) throw std::invalid_argument("transport and client are required");
 }
 
 const DeviceInfo& CameraConnection::info() const noexcept { return info_; }
@@ -24,7 +24,7 @@ bool CameraConnection::connected() const noexcept { return transport_->connected
 std::vector<std::uint8_t> CameraConnection::command(
     Cmd command,
     std::span<const std::uint8_t> payload) {
-    const auto frame = client_.make_command(info_.device_id, command, payload);
+    const auto frame = client_->make_command(info_.device_id, command, payload);
     transport_->send(frame);
     return transport_->receive();
 }
@@ -47,12 +47,13 @@ CameraConnection ConnectionManager::connect(const DeviceInfo& device) {
     for (const auto preferred : options_.preferred_transports) {
         const auto it = std::find(device.transports.begin(), device.transports.end(), preferred);
         if (it == device.transports.end()) continue;
+
         auto transport = factory_(device, preferred);
         if (transport && transport->connected()) {
             return CameraConnection(
                 device,
                 std::move(transport),
-                CameraClient(key_));
+                std::make_unique<CameraClient>(key_));
         }
     }
     throw std::runtime_error("no compatible SyncStream transport available");
