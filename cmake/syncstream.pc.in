@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=\${prefix}
+libdir=\${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=\${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: SyncStream
+Description: Transport-agnostic encrypted C++ control-plane library for device and camera applications
+Version: @PROJECT_VERSION@
+Libs: -L\${libdir} -lsyncstream
+Libs.private: -lcrypto
+Cflags: -I\${includedir}
+Requires.private: openssl

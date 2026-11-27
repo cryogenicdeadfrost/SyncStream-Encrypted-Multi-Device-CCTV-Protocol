@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(syncstream VERSION 1.0.0 LANGUAGES CXX)
+project(syncstream VERSION 1.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(SYNCSTREAM_STRICT "Enable strict warnings" ON)
 option(SYNCSTREAM_BUILD_EXAMPLES "Build integration examples" ON)
+option(SYNCSTREAM_BUILD_CAPTURE_EXAMPLE "Build the optional OpenCV camera capture example" OFF)
 
 find_package(OpenSSL REQUIRED)
 include(GNUInstallDirs)
@@ -19,6 +20,8 @@ add_library(syncstream STATIC
     src/edge_hub.cpp
     src/api.cpp
 )
+
+add_library(SyncStream::syncstream ALIAS syncstream)
 
 target_include_directories(syncstream
     PUBLIC
@@ -45,6 +48,17 @@ if(SYNCSTREAM_BUILD_EXAMPLES)
 
     add_executable(syncstream_edge_hub_demo examples/edge_hub_demo.cpp)
     target_link_libraries(syncstream_edge_hub_demo PRIVATE syncstream)
+
+    add_executable(syncstream_standalone_phone_test examples/standalone_phone_test.cpp)
+    target_link_libraries(syncstream_standalone_phone_test PRIVATE syncstream)
+endif()
+
+if(SYNCSTREAM_BUILD_CAPTURE_EXAMPLE)
+    find_package(OpenCV REQUIRED COMPONENTS videoio)
+    add_executable(syncstream_capture_stream examples/capture_stream.cpp)
+    target_compile_definitions(syncstream_capture_stream PRIVATE SYNCSTREAM_HAS_OPENCV=1)
+    target_link_libraries(syncstream_capture_stream PRIVATE syncstream ${OpenCV_LIBS})
+    target_include_directories(syncstream_capture_stream PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
 
 enable_testing()
@@ -64,6 +78,10 @@ add_test(NAME syncstream_edge_hub_tests COMMAND syncstream_edge_hub_tests)
 add_executable(syncstream_api_tests tests/api_test.cpp)
 target_link_libraries(syncstream_api_tests PRIVATE syncstream)
 add_test(NAME syncstream_api_tests COMMAND syncstream_api_tests)
+
+if(SYNCSTREAM_BUILD_EXAMPLES)
+    add_test(NAME syncstream_standalone_phone_test COMMAND syncstream_standalone_phone_test)
+endif()
 
 install(
     TARGETS syncstream
@@ -103,3 +121,26 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/SyncStreamConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SyncStream
 )
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/syncstream.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/syncstream.pc
+    @ONLY
+)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/syncstream.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
+
+set(CPACK_PACKAGE_NAME "syncstream")
+set(CPACK_PACKAGE_VENDOR "SyncStream")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Transport-agnostic encrypted C++ control-plane SDK")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_CONTACT "SyncStream maintainers")
+set(CPACK_GENERATOR "TGZ")
+if(UNIX AND NOT APPLE)
+    set(CPACK_GENERATOR "TGZ;DEB")
+endif()
+include(CPack)
