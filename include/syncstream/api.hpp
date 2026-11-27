@@ -76,8 +76,8 @@ class CameraServer {
 public:
     CameraServer(std::array<std::uint8_t, key_len> key, ApiConfig config = ApiConfig::edge_relay());
 
-    CommandRequest open(const Env& env) const;
-    CommandRequest open_wire(std::span<const std::uint8_t> wire) const;
+    CommandRequest open(const Env& env);
+    CommandRequest open_wire(std::span<const std::uint8_t> wire);
 
     std::vector<std::uint8_t> make_response(
         const CommandRequest& request,
