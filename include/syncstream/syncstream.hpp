@@ -8,4 +8,5 @@
 #include "syncstream/keychain.hpp"
 #include "syncstream/middleware.hpp"
 #include "syncstream/secure_channel.hpp"
+#include "syncstream/reliability.hpp"
 #include "syncstream/transport.hpp"
