@@ -316,3 +316,88 @@ Future work belongs around the core:
 9. SyncStream Station as the user-facing UI/application layer
 
 SyncStream Station can therefore consume this repository as its protocol dependency instead of duplicating or modifying the security implementation.
+
+
+## Plug-and-play architecture
+
+SyncStream now exposes a transport-independent discovery and connection layer on top of the existing secure control protocol.
+
+The intended architecture is:
+
+    Android Phone
+         |
+         v
+    SyncStream Phone API
+         |
+         +---- USB       (initial bootstrap/debug)
+         +---- BLE       (discovery/bootstrap)
+         +---- Wi-Fi Direct
+         +---- LAN/TCP
+         +---- custom transport
+         |
+         v
+    SyncStream secure session
+         |
+         v
+    Camera-side SyncStream agent
+         |
+         +---- camera hardware
+         +---- ONVIF
+         +---- RTSP/WebRTC/media application
+
+The core provides `DeviceInfo`, `DiscoveryProvider`, `Transport`, `ConnectionManager`, `CameraConnection`, and bootstrap helpers. Concrete Android/BLE/USB/Wi-Fi adapters remain platform modules.
+
+The developer-facing idea is intentionally small:
+
+    auto devices = phone.discover(provider);
+    auto camera = phone.connect(devices.front());
+    auto response = camera.command(syncstream::Cmd::get_status);
+
+The transport is selected automatically from the device's advertised capabilities and the configured preference order.
+
+## Android 7+ reference test
+
+The repository now includes `android-test/`, an API 24+ Android reference application. It links the actual SyncStream C++ core through the Android NDK rather than reimplementing the protocol in Kotlin.
+
+The first debugging connection is USB only for deployment and `adb` diagnostics. The SyncStream session itself can then run wirelessly over LAN.
+
+The companion PC program is:
+
+    cmake -S . -B build
+    cmake --build build --target syncstream_android_test_bridge
+    ./build/syncstream_android_test_bridge
+
+The Android app connects to the bridge over TCP and sends real SyncStream authenticated commands. See `docs/android-test.md`.
+
+The sample key is intentionally fixed for repeatable testing. It must never be reused in production.
+
+## Security and fault tolerance
+
+The protocol layer remains responsible for authenticated encryption, sequence numbers, timestamps, replay rejection, payload limits, malformed-frame rejection, request correlation, and key staging.
+
+The plug-and-play layer adds device discovery, transport selection, bootstrap metadata, identity fingerprints, and connection lifecycle management.
+
+Production enrollment should evolve the current PSK test path into device-specific credentials using authenticated device identity, ECDH-based session establishment, explicit user confirmation, credential rotation, and revocation.
+
+Transport loss must not be treated as protocol success. Recovery should use bounded timeouts, exponential backoff, jitter, heartbeats, session expiry, and idempotency-aware retries. Hardware-changing commands must not be blindly replayed after an uncertain delivery.
+
+For the detailed state machine and threat model, see `docs/protocol.md`.
+
+## Testing layers
+
+The project now has four useful levels:
+
+1. Unit tests for cryptography, middleware, EdgeHub, and API behavior.
+2. Standalone phone/camera loopback testing with no network.
+3. Plug-and-play loopback testing through the transport abstraction.
+4. Real Android-to-PC wireless testing through the reference Android app and TCP bridge.
+
+This is deliberate. A developer can debug the protocol on a laptop first, then validate the actual Android JNI integration, then replace the bridge with a real camera transport without rewriting the protocol.
+
+## Production boundaries
+
+SyncStream still does not become an NVR or media framework. It does not own camera video codecs, RTSP/WebRTC media transport, user accounts, cloud infrastructure, or vendor-specific camera control.
+
+Those are adapters/application concerns.
+
+The repository's job is to make the secure camera control plane reusable enough that SyncStream Station can sit on top of it instead of duplicating it.
