@@ -203,6 +203,7 @@ For a first smoke test, build syncstream_standalone_phone_test. It simulates bot
 cmake -S . -B build
 cmake --build build
 ctest --test-dir build --output-on-failure
+cmake --build build --target package
 ~~~
 
 The build includes the complete library core:
