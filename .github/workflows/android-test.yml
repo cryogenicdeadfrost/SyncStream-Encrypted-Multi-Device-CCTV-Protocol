@@ -41,9 +41,14 @@ jobs:
           chmod +x scripts/build_android_openssl.sh
           scripts/build_android_openssl.sh
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10"
+
       - name: Build debug APK
         working-directory: android-test
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
