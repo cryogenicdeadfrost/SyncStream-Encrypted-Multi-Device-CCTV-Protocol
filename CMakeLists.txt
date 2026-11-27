@@ -22,6 +22,7 @@ add_library(syncstream STATIC
     src/discovery.cpp
     src/bootstrap.cpp
     src/connection.cpp
+    src/reliability.cpp
 )
 
 add_library(SyncStream::syncstream ALIAS syncstream)
@@ -91,6 +92,10 @@ add_test(NAME syncstream_api_tests COMMAND syncstream_api_tests)
 add_executable(syncstream_plug_and_play_tests tests/plug_and_play_test.cpp)
 target_link_libraries(syncstream_plug_and_play_tests PRIVATE syncstream)
 add_test(NAME syncstream_plug_and_play_tests COMMAND syncstream_plug_and_play_tests)
+
+add_executable(syncstream_reliability_tests tests/reliability_test.cpp)
+target_link_libraries(syncstream_reliability_tests PRIVATE syncstream)
+add_test(NAME syncstream_reliability_tests COMMAND syncstream_reliability_tests)
 
 if(SYNCSTREAM_BUILD_EXAMPLES)
     add_test(NAME syncstream_standalone_phone_test COMMAND syncstream_standalone_phone_test)
