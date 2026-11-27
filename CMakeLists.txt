@@ -19,6 +19,10 @@ add_library(syncstream STATIC
     src/keychain.cpp
     src/edge_hub.cpp
     src/api.cpp
+    src/discovery.cpp
+    src/bootstrap.cpp
+    src/connection.cpp
+    src/reliability.cpp
 )
 
 add_library(SyncStream::syncstream ALIAS syncstream)
@@ -51,6 +55,12 @@ if(SYNCSTREAM_BUILD_EXAMPLES)
 
     add_executable(syncstream_standalone_phone_test examples/standalone_phone_test.cpp)
     target_link_libraries(syncstream_standalone_phone_test PRIVATE syncstream)
+
+    add_executable(syncstream_plug_and_play_demo examples/plug_and_play_demo.cpp)
+    target_link_libraries(syncstream_plug_and_play_demo PRIVATE syncstream)
+
+    add_executable(syncstream_android_test_bridge examples/android_test_bridge.cpp)
+    target_link_libraries(syncstream_android_test_bridge PRIVATE syncstream)
 endif()
 
 if(SYNCSTREAM_BUILD_CAPTURE_EXAMPLE)
@@ -78,6 +88,14 @@ add_test(NAME syncstream_edge_hub_tests COMMAND syncstream_edge_hub_tests)
 add_executable(syncstream_api_tests tests/api_test.cpp)
 target_link_libraries(syncstream_api_tests PRIVATE syncstream)
 add_test(NAME syncstream_api_tests COMMAND syncstream_api_tests)
+
+add_executable(syncstream_plug_and_play_tests tests/plug_and_play_test.cpp)
+target_link_libraries(syncstream_plug_and_play_tests PRIVATE syncstream)
+add_test(NAME syncstream_plug_and_play_tests COMMAND syncstream_plug_and_play_tests)
+
+add_executable(syncstream_reliability_tests tests/reliability_test.cpp)
+target_link_libraries(syncstream_reliability_tests PRIVATE syncstream)
+add_test(NAME syncstream_reliability_tests COMMAND syncstream_reliability_tests)
 
 if(SYNCSTREAM_BUILD_EXAMPLES)
     add_test(NAME syncstream_standalone_phone_test COMMAND syncstream_standalone_phone_test)
