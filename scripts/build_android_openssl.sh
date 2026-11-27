@@ -36,11 +36,26 @@ export PATH="${NDK}/toolchains/llvm/prebuilt/${HOST_TAG}/bin:${PATH}"
 build_one() {
   local target="$1"
   local abi="$2"
+  local TARGET_HOST
+  case "$abi" in
+    arm64-v8a) TARGET_HOST="aarch64-linux-android" ;;
+    x86_64) TARGET_HOST="x86_64-linux-android" ;;
+    *) echo "Unsupported Android ABI: $abi" >&2; exit 2 ;;
+  esac
   local prefix="${OUT}/${abi}"
   local build_dir="${BUILD_ROOT}/${abi}"
 
   rm -rf "${build_dir}" "${prefix}"
   mkdir -p "${build_dir}"
+
+  # Use the NDK LLVM tools explicitly. This prevents OpenSSL's generic
+  # host-tool detection from selecting the Linux linker/ar for Android.
+  export CC="${TARGET_HOST}24-clang"
+  export CXX="${TARGET_HOST}24-clang++"
+  export AR=llvm-ar
+  export RANLIB=llvm-ranlib
+  export NM=llvm-nm
+  export STRIP=llvm-strip
 
   # The source tree lives outside the build directory. This avoids the
   # previous recursive "copy a directory into itself" failure.
